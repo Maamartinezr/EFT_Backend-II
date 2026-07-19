@@ -1,0 +1,2183 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MiniMarket Plus API",
+    "description": "Backend para gestion de inventario, ventas, carrito y usuarios con seguridad JWT.",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9090",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Inventario",
+      "description": "Gestion de movimientos de inventario, entradas, salidas y trazabilidad de stock"
+    },
+    {
+      "name": "Producto",
+      "description": "Gestion de catalogo, disponibilidad y alertas de stock"
+    },
+    {
+      "name": "Autenticacion",
+      "description": "Registro e inicio de sesion con JWT"
+    },
+    {
+      "name": "Carrito",
+      "description": "Gestion del carrito de compras y productos asociados a usuarios"
+    },
+    {
+      "name": "Usuario",
+      "description": "Gestion de usuarios, roles y datos de acceso sin exponer contrasenas"
+    }
+  ],
+  "paths": {
+    "/api/usuarios/{id}": {
+      "get": {
+        "tags": [
+          "Usuario"
+        ],
+        "summary": "Obtiene un usuario por id con enlaces HATEOAS sin exponer password",
+        "description": "Consulta un usuario especifico como UsuarioDTO, agregando enlaces self, collection y carrito.",
+        "operationId": "obtenerUsuarioPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del usuario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Usuario encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelUsuarioDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Usuario"
+        ],
+        "summary": "Actualiza un usuario",
+        "description": "Modifica los datos de un usuario existente, manteniendo la respuesta mediante UsuarioDTO.",
+        "operationId": "actualizarUsuario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del usuario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Usuario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          },
+          "200": {
+            "description": "Usuario actualizado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelUsuarioDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Usuario"
+        ],
+        "summary": "Elimina un usuario",
+        "description": "Elimina un usuario existente cuando se encuentra registrado.",
+        "operationId": "eliminarUsuario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del usuario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "204": {
+            "description": "Usuario eliminado correctamente"
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/productos/{id}": {
+      "get": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Obtiene un producto por id",
+        "description": "Retorna un producto individual como DTO, incorporando enlaces HATEOAS hacia el recurso actual, la coleccion, la categoria y el carrito.",
+        "operationId": "obtenerProductoPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del producto",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Producto encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelProductoDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Producto no encontrado"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Actualiza precio, stock o categoria de un producto",
+        "description": "Actualiza los datos de un producto existente. Requiere rol administrador o jefe de turno.",
+        "operationId": "actualizarProducto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del producto",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Producto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          },
+          "404": {
+            "description": "Producto no encontrado"
+          },
+          "200": {
+            "description": "Producto actualizado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelProductoDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Elimina un producto",
+        "description": "Elimina un producto existente del catalogo. Requiere rol administrador.",
+        "operationId": "eliminarProducto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del producto",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "204": {
+            "description": "Producto eliminado correctamente"
+          },
+          "404": {
+            "description": "Producto no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/inventario/{id}": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Obtiene un movimiento de inventario por id con enlaces HATEOAS",
+        "description": "Consulta un movimiento especifico de inventario y entrega enlaces hacia el recurso actual, la coleccion y el producto asociado.",
+        "operationId": "obtenerMovimientoPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del movimiento de inventario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "200": {
+            "description": "Movimiento encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelInventarioDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "404": {
+            "description": "Movimiento no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Actualiza un movimiento de inventario",
+        "description": "Modifica los datos de un movimiento de inventario existente.",
+        "operationId": "actualizarMovimiento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del movimiento de inventario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Inventario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Movimiento actualizado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelInventarioDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          },
+          "404": {
+            "description": "Movimiento no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Elimina un movimiento de inventario",
+        "description": "Elimina un movimiento registrado cuando existe en la base de datos.",
+        "operationId": "eliminarMovimiento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del movimiento de inventario",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "204": {
+            "description": "Movimiento eliminado correctamente"
+          },
+          "404": {
+            "description": "Movimiento no encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/detalle-ventas/{id}": {
+      "get": {
+        "tags": [
+          "detalle-venta-controller"
+        ],
+        "operationId": "obtenerDetalleVentaPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleVenta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "detalle-venta-controller"
+        ],
+        "operationId": "actualizarDetalleVenta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetalleVenta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleVenta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "detalle-venta-controller"
+        ],
+        "operationId": "eliminarDetalleVenta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/categorias/{id}": {
+      "get": {
+        "tags": [
+          "categoria-controller"
+        ],
+        "operationId": "obtenerCategoriaPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Categoria"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "categoria-controller"
+        ],
+        "operationId": "actualizarCategoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Categoria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Categoria"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "categoria-controller"
+        ],
+        "operationId": "eliminarCategoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/carrito/{id}": {
+      "get": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Obtiene un carrito por id con enlaces HATEOAS",
+        "description": "Consulta un registro individual del carrito e incorpora enlaces hacia el recurso, la coleccion, el usuario y el producto.",
+        "operationId": "obtenerCarritoPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del registro de carrito",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "404": {
+            "description": "Carrito no encontrado"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Carrito encontrado",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelCarritoDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Actualiza un carrito",
+        "description": "Modifica la cantidad, usuario o producto asociado a un registro de carrito existente.",
+        "operationId": "actualizarCarrito",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del registro de carrito",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Carrito"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "404": {
+            "description": "Carrito no encontrado"
+          },
+          "200": {
+            "description": "Carrito actualizado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelCarritoDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Elimina un producto del carrito",
+        "description": "Elimina un registro del carrito cuando existe en la base de datos.",
+        "operationId": "eliminarProductoDelCarrito",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Identificador unico del registro de carrito",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "404": {
+            "description": "Carrito no encontrado"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "204": {
+            "description": "Producto eliminado del carrito correctamente"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ventas": {
+      "get": {
+        "tags": [
+          "venta-controller"
+        ],
+        "operationId": "listarVentas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Venta"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "venta-controller"
+        ],
+        "operationId": "guardarVenta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Venta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usuarios": {
+      "get": {
+        "tags": [
+          "Usuario"
+        ],
+        "summary": "Lista usuarios con enlaces HATEOAS sin exponer passwords",
+        "description": "Retorna usuarios como CollectionModel\u003CEntityModel\u003CUsuarioDTO\u003E\u003E, incluyendo roles y enlaces hipermedia sin exponer contrasenas.",
+        "operationId": "listarUsuarios",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de usuarios por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "200": {
+            "description": "Usuarios consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelUsuarioDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Usuario"
+        ],
+        "summary": "Crea un usuario",
+        "description": "Registra un usuario con sus roles asociados. Operacion reservada para administradores.",
+        "operationId": "guardarUsuario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Usuario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Usuario creado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelUsuarioDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/productos": {
+      "get": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Lista productos con enlaces HATEOAS",
+        "description": "Retorna una coleccion paginada de productos representados como DTO y enriquecidos con enlaces self, collection, disponibles y stock-bajo.",
+        "operationId": "listarProductos",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de registros por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Productos consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelProductoDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Crea un producto",
+        "description": "Registra un nuevo producto en el catalogo. Requiere rol administrador o jefe de turno.",
+        "operationId": "guardarProducto",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Producto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          },
+          "200": {
+            "description": "Producto creado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelProductoDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/inventario": {
+      "get": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Lista movimientos de inventario con enlaces HATEOAS",
+        "description": "Retorna movimientos de inventario como CollectionModel\u003CEntityModel\u003CInventarioDTO\u003E\u003E, incluyendo links self, collection y producto.",
+        "operationId": "listarMovimientosDeInventario",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de movimientos por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Movimientos consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelInventarioDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Inventario"
+        ],
+        "summary": "Registra un movimiento de inventario",
+        "description": "Crea una entrada o salida de inventario asociada a un producto.",
+        "operationId": "registrarMovimiento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Inventario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Movimiento registrado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelInventarioDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/detalle-ventas": {
+      "get": {
+        "tags": [
+          "detalle-venta-controller"
+        ],
+        "operationId": "listarDetalleVentas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DetalleVenta"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "detalle-venta-controller"
+        ],
+        "operationId": "guardarDetalleVenta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetalleVenta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleVenta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categorias": {
+      "get": {
+        "tags": [
+          "categoria-controller"
+        ],
+        "operationId": "listarCategorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Categoria"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "categoria-controller"
+        ],
+        "operationId": "guardarCategoria",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Categoria"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Categoria"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/carrito": {
+      "get": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Lista carritos con enlaces HATEOAS",
+        "description": "Retorna registros de carrito como CollectionModel\u003CEntityModel\u003CCarritoDTO\u003E\u003E, incluyendo links self, collection, usuario y producto.",
+        "operationId": "listarCarrito",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de registros por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 3
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Carritos consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelCarritoDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Agrega un producto al carrito",
+        "description": "Registra un producto asociado a un usuario dentro del carrito de compras.",
+        "operationId": "agregarProductoAlCarrito",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Carrito"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Producto agregado al carrito correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelCarritoDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Registra un cliente con rol ROLE_CLIENTE",
+        "description": "Crea una cuenta cliente, cifra la contrasena con BCrypt y retorna un token JWT para el nuevo usuario.",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente registrado correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El username ya existe"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Inicia sesion y retorna un token JWT",
+        "description": "Autentica un usuario registrado mediante username y password. Si las credenciales son validas, retorna token JWT, tipo Bearer, username y roles asociados.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Inicio de sesion correcto",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales invalidas"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "400": {
+            "description": "Solicitud invalida"
+          }
+        }
+      }
+    },
+    "/public/hola": {
+      "get": {
+        "tags": [
+          "hola-mundo-controller"
+        ],
+        "operationId": "holaMundo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ventas/{id}": {
+      "get": {
+        "tags": [
+          "venta-controller"
+        ],
+        "operationId": "obtenerVentaPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/productos/stock-bajo": {
+      "get": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Lista productos que requieren reposicion",
+        "description": "Retorna productos cuyo stock es menor o igual al minimo informado. Requiere rol administrador o jefe de turno.",
+        "operationId": "listarProductosConStockBajo",
+        "parameters": [
+          {
+            "name": "minimo",
+            "in": "query",
+            "description": "Stock maximo para considerar un producto como bajo",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 10
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de registros por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Usuario sin permisos suficientes"
+          },
+          "401": {
+            "description": "Usuario no autenticado"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Productos con stock bajo consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelProductoDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/productos/disponibles": {
+      "get": {
+        "tags": [
+          "Producto"
+        ],
+        "summary": "Consulta productos con stock disponible para clientes",
+        "description": "Retorna productos cuyo stock es mayor a cero, incluyendo enlaces HATEOAS para navegar al recurso y a la coleccion.",
+        "operationId": "listarProductosDisponibles",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numero de pagina a consultar, comenzando desde 0",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Cantidad de registros por pagina",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "500": {
+            "description": "Error interno del servidor"
+          },
+          "200": {
+            "description": "Productos disponibles consultados correctamente",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelProductoDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Rol": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rol"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "EntityModelUsuarioDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador unico del usuario",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "Nombre de usuario utilizado para iniciar sesion",
+            "example": "admin"
+          },
+          "roles": {
+            "type": "array",
+            "description": "Roles asociados al usuario",
+            "example": [
+              "ROLE_ADMIN"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "Producto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "stock": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/Categoria"
+          }
+        }
+      },
+      "EntityModelProductoDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador unico del producto",
+            "example": 1
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre comercial del producto",
+            "example": "Arroz grano largo 1kg"
+          },
+          "precio": {
+            "type": "number",
+            "format": "double",
+            "description": "Precio de venta del producto en pesos chilenos",
+            "example": 1490
+          },
+          "stock": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Cantidad disponible en stock",
+            "example": 80
+          },
+          "categoriaId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador de la categoria asociada",
+            "example": 1
+          },
+          "categoriaNombre": {
+            "type": "string",
+            "description": "Nombre de la categoria asociada",
+            "example": "Abarrotes"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "Inventario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "producto": {
+            "$ref": "#/components/schemas/Producto"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoMovimiento": {
+            "type": "string"
+          },
+          "fechaMovimiento": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EntityModelInventarioDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador unico del movimiento de inventario",
+            "example": 1
+          },
+          "productoId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del producto afectado por el movimiento",
+            "example": 1
+          },
+          "productoNombre": {
+            "type": "string",
+            "description": "Nombre del producto afectado por el movimiento",
+            "example": "Arroz grano largo 1kg"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Cantidad ingresada o descontada del inventario",
+            "example": 50
+          },
+          "tipoMovimiento": {
+            "type": "string",
+            "description": "Tipo de movimiento realizado",
+            "example": "Entrada"
+          },
+          "fechaMovimiento": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha y hora del movimiento de inventario",
+            "example": "2026-07-18T19:00:00.000+00:00"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "DetalleVenta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "venta": {
+            "$ref": "#/components/schemas/Venta"
+          },
+          "producto": {
+            "$ref": "#/components/schemas/Producto"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Venta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/Usuario"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Carrito": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/Usuario"
+          },
+          "producto": {
+            "$ref": "#/components/schemas/Producto"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "EntityModelCarritoDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador unico del registro de carrito",
+            "example": 1
+          },
+          "usuarioId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del usuario asociado al carrito",
+            "example": 4
+          },
+          "username": {
+            "type": "string",
+            "description": "Nombre de usuario asociado al carrito",
+            "example": "cliente"
+          },
+          "productoId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Identificador del producto agregado",
+            "example": 1
+          },
+          "productoNombre": {
+            "type": "string",
+            "description": "Nombre del producto agregado",
+            "example": "Arroz grano largo 1kg"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Cantidad del producto dentro del carrito",
+            "example": 2
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "description": "Datos requeridos para registrar un nuevo cliente",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Nombre de usuario nuevo",
+            "example": "cliente_nuevo",
+            "maxLength": 50,
+            "minLength": 3
+          },
+          "password": {
+            "type": "string",
+            "description": "Contrasena del nuevo usuario",
+            "example": "Cliente123",
+            "maxLength": 100,
+            "minLength": 6
+          }
+        },
+        "required": [
+          "password",
+          "username"
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "description": "Respuesta de autenticacion generada luego de login o registro exitoso",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token JWT que debe enviarse como Bearer token en endpoints protegidos",
+            "example": "eyJhbGciOiJIUzI1NiJ9..."
+          },
+          "tipo": {
+            "type": "string",
+            "description": "Tipo de token utilizado por el esquema de autenticacion",
+            "example": "Bearer"
+          },
+          "username": {
+            "type": "string",
+            "description": "Nombre del usuario autenticado",
+            "example": "admin"
+          },
+          "roles": {
+            "type": "array",
+            "description": "Roles asociados al usuario autenticado",
+            "example": [
+              "ROLE_ADMIN"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "description": "Credenciales requeridas para iniciar sesion y obtener un token JWT",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Nombre de usuario registrado",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "description": "Contrasena del usuario registrado",
+            "example": "Admin123"
+          }
+        },
+        "required": [
+          "password",
+          "username"
+        ]
+      },
+      "CollectionModelEntityModelUsuarioDTO": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "usuarios": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelUsuarioDTO"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "CollectionModelEntityModelProductoDTO": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "productos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelProductoDTO"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "CollectionModelEntityModelInventarioDTO": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "inventarios": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelInventarioDTO"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "CollectionModelEntityModelCarritoDTO": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "carritos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelCarritoDTO"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "hreflang": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "deprecation": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "templated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Links": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/Link"
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "in": "header",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
