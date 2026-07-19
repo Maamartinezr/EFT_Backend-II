@@ -59,10 +59,7 @@ Su objetivo es exponer servicios para la gestión de entidades principales del n
 
 - Gracias a esta clase, al levantar el backend se crean roles, usuarios de prueba, categorías, productos, movimientos de inventario y carritos asociados a usuarios. Esto facilita la validación de los endpoints desde Swagger y Postman, ya que la aplicación inicia con información suficiente para consultar productos, probar autenticación JWT, revisar stock bajo, visualizar inventario y comprobar respuestas HATEOAS.
 
-La consola H2 está disponible en:
-
-```text
-http://localhost:9090/h2-console
+La consola H2 está disponible en: http://localhost:9090/h2-console
 
 ## Estructura general del proyecto
 
