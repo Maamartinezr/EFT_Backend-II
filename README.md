@@ -1,4 +1,4 @@
-# Minimarket Backend - Backend II Sumativa S7
+# Aplicativo Minimarket plus - Backend II EFT S9
 
 Proyecto backend desarrollado con **Java** y **Spring Boot** para la gestión de un minimarket.  
 Incluye módulos de productos, categorías, inventario, ventas, detalle de ventas, usuarios, seguridad y documentación de API.
@@ -53,34 +53,141 @@ Su objetivo es exponer servicios para la gestión de entidades principales del n
 
 ---
 
+### Función de `DataInitializer` y consola H2
+
+- La clase `DataInitializer` se ejecuta automáticamente al iniciar la aplicación Spring Boot. Su función es cargar datos iniciales en la base de datos H2 en memoria, permitiendo probar el sistema sin tener que insertar registros manualmente.
+
+- Gracias a esta clase, al levantar el backend se crean roles, usuarios de prueba, categorías, productos, movimientos de inventario y carritos asociados a usuarios. Esto facilita la validación de los endpoints desde Swagger y Postman, ya que la aplicación inicia con información suficiente para consultar productos, probar autenticación JWT, revisar stock bajo, visualizar inventario y comprobar respuestas HATEOAS.
+
+La consola H2 está disponible en:
+
+```text
+http://localhost:9090/h2-console
+
 ## Estructura general del proyecto
 
 ```bash
-MINIMARKET_S6/
+minimarket/
+│
+├── .idea/                          # Archivos de configuración de IDE
+├── .mvn/                           # Archivos de configuración del Maven Wrapper
+├── output/                         # Evidencias, informes y reportes generados
+│   ├── jacoco/                     # Reporte de cobertura JaCoCo
+│   ├── pdf/                        # Informe final en PDF
+│   │   └── Informe_EFT_Minimarket_Plus.pdf
+│   ├── testing/                    # Resultados de pruebas Surefire
+│   └── word/                       # Informe editable en Word
+│       └── Informe_EFT_Minimarket_Plus.docx
 │
 ├── src/
 │   ├── main/
 │   │   ├── java/com/minimarket/
-│   │   │   ├── controller/
-│   │   │   ├── dto/
-│   │   │   ├── entity/
-│   │   │   ├── repository/
-│   │   │   ├── security/
+│   │   │   ├── config/             # Configuraciones generales del backend
+│   │   │   │   ├── DataInitializer.java
+│   │   │   │   └── OpenApiConfig.java
+│   │   │   │
+│   │   │   ├── controller/         # Controladores REST de la aplicación
+│   │   │   │   ├── AuthController.java
+│   │   │   │   ├── CarritoController.java
+│   │   │   │   ├── CategoriaController.java
+│   │   │   │   ├── DetalleVentaController.java
+│   │   │   │   ├── HolaMundoController.java
+│   │   │   │   ├── InventarioController.java
+│   │   │   │   ├── ProductoController.java
+│   │   │   │   ├── UsuarioController.java
+│   │   │   │   └── VentaController.java
+│   │   │   │
+│   │   │   ├── dto/                # DTOs para respuestas controladas y documentación OpenAPI
+│   │   │   │   ├── CarritoDTO.java
+│   │   │   │   ├── InventarioDTO.java
+│   │   │   │   ├── ProductoDTO.java
+│   │   │   │   └── UsuarioDTO.java
+│   │   │   │
+│   │   │   ├── entity/             # Entidades del modelo de negocio
+│   │   │   │   ├── Carrito.java
+│   │   │   │   ├── Categoria.java
+│   │   │   │   ├── DetalleVenta.java
+│   │   │   │   ├── Inventario.java
+│   │   │   │   ├── Producto.java
+│   │   │   │   ├── Rol.java
+│   │   │   │   ├── Usuario.java
+│   │   │   │   └── Venta.java
+│   │   │   │
+│   │   │   ├── hateoas/            # Ensambladores HATEOAS para EntityModel y CollectionModel
+│   │   │   │   ├── CarritoModelAssembler.java
+│   │   │   │   ├── InventarioModelAssembler.java
+│   │   │   │   ├── ProductoModelAssembler.java
+│   │   │   │   └── UsuarioModelAssembler.java
+│   │   │   │
+│   │   │   ├── repository/         # Acceso a datos mediante Spring Data JPA
+│   │   │   │   ├── CarritoRepository.java
+│   │   │   │   ├── CategoriaRepository.java
+│   │   │   │   ├── DetalleVentaRepository.java
+│   │   │   │   ├── InventarioRepository.java
+│   │   │   │   ├── ProductoRepository.java
+│   │   │   │   ├── RolRepository.java
+│   │   │   │   ├── UsuarioRepository.java
+│   │   │   │   └── VentaRepository.java
+│   │   │   │
+│   │   │   ├── security/           # Componentes de seguridad y autenticación
 │   │   │   │   ├── config/
-│   │   │   │   ├── filter/
+│   │   │   │   │   ├── JwtAuthenticationFilter.java
+│   │   │   │   │   └── SecurityConfig.java
 │   │   │   │   ├── model/
+│   │   │   │   │   ├── AuthResponse.java
+│   │   │   │   │   ├── CustomUserDetails.java
+│   │   │   │   │   ├── LoginRequest.java
+│   │   │   │   │   └── RegisterRequest.java
 │   │   │   │   ├── service/
+│   │   │   │   │   └── CustomUserDetailsService.java
 │   │   │   │   └── util/
-│   │   │   ├── service/
-│   │   │   ├── exception/
+│   │   │   │       └── JwtUtil.java
+│   │   │   │
+│   │   │   ├── service/            # Interfaces y lógica de negocio
+│   │   │   │   ├── impl/           # Implementación de servicios
+│   │   │   │   │   ├── CarritoServiceImpl.java
+│   │   │   │   │   ├── CategoriaServiceImpl.java
+│   │   │   │   │   ├── DetalleVentaServiceImpl.java
+│   │   │   │   │   ├── InventarioServiceImpl.java
+│   │   │   │   │   ├── ProductoServiceImpl.java
+│   │   │   │   │   ├── RolServiceImpl.java
+│   │   │   │   │   ├── UsuarioServiceImpl.java
+│   │   │   │   │   └── VentaServiceImpl.java
+│   │   │   │   │
+│   │   │   │   ├── CarritoService.java
+│   │   │   │   ├── CategoriaService.java
+│   │   │   │   ├── DetalleVentaService.java
+│   │   │   │   ├── InventarioService.java
+│   │   │   │   ├── ProductoService.java
+│   │   │   │   ├── RolService.java
+│   │   │   │   ├── UsuarioService.java
+│   │   │   │   └── VentaService.java
+│   │   │   │
 │   │   │   └── MinimarketApplication.java
+│   │   │
+│   │   └── resources/
+│   │       └── application.properties
 │   │
-│   └── resources/
-│       └── application.properties
+│   └── test/
+│       └── java/com/minimarket/
+│           ├── ApiDocumentationIntegrationTest.java
+│           ├── AuthSecurityIntegrationTest.java
+│           ├── DataInitializerIntegrationTest.java
+│           ├── MinimarketApplicationTests.java
+│           ├── ProductoServiceImplTest.java
+│           ├── SecurityRoleAccessIntegrationTest.java
+│           └── ServiceLayerUnitTest.java
 │
-├── src/test/java/com/minimarket/
-├── pom.xml
-└── README.md
+├── target/                         # Archivos compilados generados por Maven
+├── tmp/                            # Archivos temporales de trabajo
+│
+├── .gitattributes
+├── .gitignore
+├── HELP.md
+├── mvnw                            # Script Maven Wrapper para Linux/Mac
+├── mvnw.cmd                        # Script Maven Wrapper para Windows
+└── pom.xml                         # Archivo de configuración y dependencias Maven
+└── README                        
 ```
 
 > Nota: la estructura exacta puede variar según la rama, pero esta representa la organización objetivo actual del proyecto.
@@ -240,18 +347,22 @@ Ejemplo breve de respuesta:
 - `POST /api/auth/login`
 
 ### Productos
-- `GET /api/productos`
-- `GET /api/productos/{id}`
-- `POST /api/productos`
-- `PUT /api/productos/{id}`
-- `DELETE /api/productos/{id}`
+GET /api/productos
+GET /api/productos/{id}
+POST /api/productos
+PUT /api/productos/{id}
+DELETE /api/productos/{id}
+GET /api/productos/disponibles
+GET /api/productos/stock-bajo.
+Soporta page y size en listados
 
 ### Carrito
-- `GET /api/carrito`
-- `GET /api/carrito/{id}`
-- `POST /api/carrito`
-- `PUT /api/carrito/{id}`
-- `DELETE /api/carrito/{id}`
+GET /api/carrito
+GET /api/carrito/{id}
+POST /api/carrito
+PUT /api/carrito/{id}
+DELETE /api/carrito/{id}.
+Soporta page y size en listados con CollectionModel
 
 ### Categorías
 - `GET /api/categorias`
@@ -261,11 +372,11 @@ Ejemplo breve de respuesta:
 - `DELETE /api/categorias/{id}`
 
 ### Inventario
-- `GET /api/inventario`
-- `GET /api/inventario/{id}`
-- `POST /api/inventario`
-- `PUT /api/inventario/{id}`
-- `DELETE /api/inventario/{id}`
+GET /api/inventario
+GET /api/inventario/{id}
+POST /api/inventario, PUT /api/inventario/{id}
+DELETE /api/inventario/{id}.
+Soporta page y size en listados con CollectionModel
 
 ### Ventas
 - `GET /api/ventas`
@@ -280,16 +391,29 @@ Ejemplo breve de respuesta:
 - `DELETE /api/detalle-ventas/{id}`
 
 ### Usuarios
-- `GET /api/usuarios`
-- `GET /api/usuarios/{id}`
-- `POST /api/usuarios`
-- `PUT /api/usuarios/{id}`
-- `DELETE /api/usuarios/{id}`
+GET /api/usuarios
+GET /api/usuarios/{id}
+POST /api/usuarios
+PUT /api/usuarios/{id}
+DELETE /api/usuarios/{id}
+/api/auth/login y /api/auth/register
+Las respuestas usan UsuarioDTO para no exponer password
 
 ### Público
 - `GET /public/hola`
 
 ---
+
+## Links de acceso
+**Swagger UI:**
+http://localhost:9090/swagger-ui.html
+**OpenAPI JSON:**
+http://localhost:9090/v3/api-docs
+**Aplicativo:**
+http://localhost:9090
+**Consola H2:**
+http://localhost:9090/h2-console
+
 
 ## Requisitos previos
 
@@ -377,7 +501,7 @@ En la evolución reciente del proyecto se incorporaron/mejoraron:
 
 ## Autor
 
-Proyecto desarrollado por **Maamartinezr**.
+Proyecto desarrollado por **Maamartinezr**. Jefe de proyecto (JP): María Martínez, Ayudante de desarrollo (AD): Tomás Zúñiga.
 
 ---
 
