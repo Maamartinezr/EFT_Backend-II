@@ -401,17 +401,6 @@ Las respuestas usan UsuarioDTO para no exponer password
 
 ---
 
-## Links de acceso
-**Swagger UI:**
-http://localhost:9090/swagger-ui.html
-**OpenAPI JSON:**
-http://localhost:9090/v3/api-docs
-**Aplicativo:**
-http://localhost:9090
-**Consola H2:**
-http://localhost:9090/h2-console
-
-
 ## Requisitos previos
 
 - **Java 17**
