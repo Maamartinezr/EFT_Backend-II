@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InventarioDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minimarket</a> &gt; <a href="index.source.html" class="el_package">com.minimarket.dto</a> &gt; <span class="el_source">InventarioDTO.java</span></div><h1>InventarioDTO.java</h1><pre class="source lang-java linenums">package com.minimarket.dto;
+
+import com.minimarket.entity.Inventario;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.hateoas.server.core.Relation;
+
+import java.util.Date;
+
+@Schema(description = &quot;DTO de salida para movimientos de inventario&quot;)
+@Relation(itemRelation = &quot;inventario&quot;, collectionRelation = &quot;inventarios&quot;)
+<span class="fc" id="L11">public record InventarioDTO(</span>
+        @Schema(description = &quot;Identificador unico del movimiento de inventario&quot;, example = &quot;1&quot;)
+        Long id,
+        @Schema(description = &quot;Identificador del producto afectado por el movimiento&quot;, example = &quot;1&quot;)
+        Long productoId,
+        @Schema(description = &quot;Nombre del producto afectado por el movimiento&quot;, example = &quot;Arroz grano largo 1kg&quot;)
+        String productoNombre,
+        @Schema(description = &quot;Cantidad ingresada o descontada del inventario&quot;, example = &quot;50&quot;)
+        Integer cantidad,
+        @Schema(description = &quot;Tipo de movimiento realizado&quot;, example = &quot;Entrada&quot;)
+        String tipoMovimiento,
+        @Schema(description = &quot;Fecha y hora del movimiento de inventario&quot;, example = &quot;2026-07-18T19:00:00.000+00:00&quot;)
+        Date fechaMovimiento
+) {
+    public static InventarioDTO fromEntity(Inventario inventario) {
+<span class="fc" id="L26">        return new InventarioDTO(</span>
+<span class="fc" id="L27">                inventario.getId(),</span>
+<span class="fc" id="L28">                inventario.getProducto().getId(),</span>
+<span class="fc" id="L29">                inventario.getProducto().getNombre(),</span>
+<span class="fc" id="L30">                inventario.getCantidad(),</span>
+<span class="fc" id="L31">                inventario.getTipoMovimiento(),</span>
+<span class="fc" id="L32">                inventario.getFechaMovimiento()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
